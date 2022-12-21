@@ -1,0 +1,25 @@
+FROM php:8.1.13-fpm-alpine3.16
+
+RUN apk add ffmpeg nano imagemagick
+RUN apk add --no-cache --virtual .phpize-deps-configure $PHPIZE_DEPS
+RUN docker-php-source extract
+RUN pecl channel-update pecl.php.net
+RUN pecl install phalcon-5.1.2
+RUN pecl install psr
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN chmod +x /usr/local/bin/install-php-extensions && sync && IPE_GD_WITHOUTAVIF=1 install-php-extensions gd exif gettext imap soap sockets tidy pdo_mysql mysqli
+RUN docker-php-ext-enable psr
+RUN docker-php-ext-enable phalcon
+RUN echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/custom-settings.ini
+RUN echo "upload_max_filesize = 120M" >> /usr/local/etc/php/conf.d/custom-settings.ini
+RUN echo "post_max_size = 130M" >> /usr/local/etc/php/conf.d/custom-settings.ini
+RUN echo "upload_tmp_dir = /code/webinterface/tmp " >> /usr/local/etc/php/conf.d/custom-settings.ini
+RUN echo "access.format = \"%R - %u %t %m %r%Q%q %s\"" >> /usr/local/etc/php-fpm.d/docker.conf
+
+WORKDIR /code/webinterface
+
+ENV ENV="/root/.ashrc"
+RUN echo "alias ll='ls -la'" > "$ENV"
+
+EXPOSE 9000
+CMD ["php-fpm"]

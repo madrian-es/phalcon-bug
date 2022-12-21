@@ -1,0 +1,20 @@
+version: "3.3"
+
+services:
+  proxy:
+    image: nginx:1.7.9
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./:/code/webinterface
+    links:
+      - php
+
+  php:
+    image: jwtbug-php:latest
+    build:
+      dockerfile: docker/php
+      context: .
+    volumes:
+      - ./:/code/webinterface
